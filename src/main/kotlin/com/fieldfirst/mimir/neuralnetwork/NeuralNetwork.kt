@@ -379,23 +379,21 @@
  */
 package com.fieldfirst.mimir.neuralnetwork
 
-import com.fieldfirst.mimir.Database
+import com.fieldfirst.mimir.database.insertUserCase
+import com.fieldfirst.mimir.database.restoreWeights
+import com.fieldfirst.mimir.database.retrieveUserCases
+import com.fieldfirst.mimir.database.saveWeights
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class NeuralNetwork(private val db: Database) {
+class NeuralNetwork {
 
     companion object {
         const val KEY_LATEST_ROOTED_MEAN_SQUARED_ERROR: String = "latestRootedMeanSquaredError"
         const val KEY_LATEST_LEARNING_RATE: String = "latestLearningRate"
         const val KEY_NUM_OF_USERCASES: String = "numberOfUserCases"
         const val KEY_TOTAL_SESSION_EPOCHS: String = "totalSessionEpochs"
-    }
-
-    init {
-        initializeWeights(db.retrieveWeights())
-        initializeUserCases(db.retrieveUserCases())
     }
 
     private val maxRepetition: Double = 128.0
@@ -459,6 +457,11 @@ class NeuralNetwork(private val db: Database) {
     }
 
     private val network: List<Layer> = listOf(Layer(4), Layer(20), Layer(1))
+
+    init {
+        initializeWeights(restoreWeights())
+        initializeUserCases(retrieveUserCases())
+    }
 
     private fun initializeWeights(storedWeights: List<Double>? = null) {
         val weights: List<Double> =
@@ -569,7 +572,7 @@ class NeuralNetwork(private val db: Database) {
         ).let {
             it.predictedInterval = normalizeInterval(betterInterval)
             userCases.add(it)
-            db.insertUserCase(it)
+            insertUserCase(it)
         }
 
         onlineTraining()
@@ -637,7 +640,7 @@ class NeuralNetwork(private val db: Database) {
             userCases.shuffle()
         } while (epochCounter++ < totalEpochs && latestRMSE > targetRMSE)
 
-        db.saveWeights(retrieveWeights())
+        saveWeights(retrieveWeights())
     }
 
     fun currentNeuralNetworkStats(): Map<String, String> =

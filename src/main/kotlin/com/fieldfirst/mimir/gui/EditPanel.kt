@@ -1,15 +1,13 @@
 package com.fieldfirst.mimir.gui
 
-import java.awt.BorderLayout
-import java.awt.FlowLayout
-import java.awt.GridLayout
+import java.awt.*
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
-class EditPanel : JPanel() {
+class EditPanel(private val contentPane: Container, private val cardLayout: CardLayout) : JPanel() {
 
     private val frontTextArea: JTextArea
     private val backTextArea: JTextArea

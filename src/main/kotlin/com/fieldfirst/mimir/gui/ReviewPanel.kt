@@ -1,15 +1,24 @@
 package com.fieldfirst.mimir.gui
 
-import java.awt.BorderLayout
-import java.awt.FlowLayout
-import java.awt.GridLayout
+import com.fieldfirst.mimir.cubit.DailyCubit
+import com.fieldfirst.mimir.cubit.HasReview
+import com.fieldfirst.mimir.cubit.NoReviewLeft
+import com.fieldfirst.mimir.cubit.ReviewCubit
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.awt.*
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
-class ReviewPanel : JPanel() {
+class ReviewPanel(private val contentPane: Container, private val cardLayout: CardLayout) : JPanel(), KoinComponent {
+
+    private val reviewCubit: ReviewCubit by inject()
+    private val dailyCubit: DailyCubit by inject()
 
     private val frontTextArea: JTextArea
     private val backTextArea: JTextArea
@@ -25,46 +34,75 @@ class ReviewPanel : JPanel() {
         add(gridLayout, BorderLayout.CENTER)
 
         val flowPanel = JPanel(FlowLayout(FlowLayout.CENTER)).apply {
-            add(JButton(IdealGradeAction))
-            add(JButton(GoodGradeAction))
-            add(JButton(PassGradeAction))
-            add(JButton(PoorGradeAction))
-            add(JButton(NullGradeAction))
+            add(JButton(IdealGradeAction()))
+            add(JButton(GoodGradeAction()))
+            add(JButton(PassGradeAction()))
+            add(JButton(PoorGradeAction()))
+            add(JButton(FailGradeAction()))
+            add(JButton(NullGradeAction()))
         }
         add(flowPanel, BorderLayout.SOUTH)
+
+        subscribeFlows()
     }
 
-    private object IdealGradeAction : AbstractAction("Ideal") {
+    private fun subscribeFlows() {
+        reviewCubit.flow.onEach { state ->
+            when (state) {
+                is HasReview -> {
+                    frontTextArea.text = state.card.front
+                    if (state.card.back != null) {
+                        backTextArea.text = state.card.back
+                        backTextArea.isVisible = true
+                    } else backTextArea.isVisible = false
+                }
+
+                NoReviewLeft -> {
+                    dailyCubit.refreshDailyStatus()
+                    cardLayout.show(contentPane, MainWindow.PANEL_DAILY)
+                }
+            }
+        }.launchIn(reviewCubit.cubitScope)
+    }
+
+    private inner class IdealGradeAction : AbstractAction("Ideal") {
         override fun actionPerformed(e: ActionEvent?) {
-            TODO("Not yet implemented")
+            reviewCubit.gradeFeedback(5)
         }
 
     }
 
-    private object GoodGradeAction : AbstractAction("Good") {
+    private inner class GoodGradeAction : AbstractAction("Good") {
         override fun actionPerformed(e: ActionEvent?) {
-            TODO("Not yet implemented")
+            reviewCubit.gradeFeedback(4)
         }
 
     }
 
-    private object PassGradeAction : AbstractAction("Pass") {
+    private inner class PassGradeAction : AbstractAction("Pass") {
         override fun actionPerformed(e: ActionEvent?) {
-            TODO("Not yet implemented")
+            reviewCubit.gradeFeedback(3)
         }
 
     }
 
-    private object PoorGradeAction : AbstractAction("Poor") {
+    private inner class PoorGradeAction : AbstractAction("Poor") {
         override fun actionPerformed(e: ActionEvent?) {
-            TODO("Not yet implemented")
+            reviewCubit.gradeFeedback(2)
         }
 
     }
 
-    private object NullGradeAction : AbstractAction("Null") {
+    private inner class FailGradeAction : AbstractAction("Fail") {
         override fun actionPerformed(e: ActionEvent?) {
-            TODO("Not yet implemented")
+            reviewCubit.gradeFeedback(1)
+        }
+
+    }
+
+    private inner class NullGradeAction : AbstractAction("Null") {
+        override fun actionPerformed(e: ActionEvent?) {
+            reviewCubit.gradeFeedback(0)
         }
 
     }
