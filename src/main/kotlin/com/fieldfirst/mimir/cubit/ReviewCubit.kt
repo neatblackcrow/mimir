@@ -2,6 +2,7 @@ package com.fieldfirst.mimir.cubit
 
 import com.fieldfirst.mimir.database.Card
 import com.fieldfirst.mimir.database.Cards
+import com.fieldfirst.mimir.database.fromResultRow
 import com.fieldfirst.mimir.neuralnetwork.NeuralNetwork
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.select
@@ -25,22 +26,7 @@ class ReviewCubit(private val neuralNetwork: NeuralNetwork) :
 
         val reviewList: List<Card> = transaction {
             Cards.select { Cards.nextReviewOn lessEq DateTime.now() }.map {
-                Card(
-                    id = it[Cards.id].value,
-                    createdOn = it[Cards.createdOn],
-                    updatedOn = it[Cards.updatedOn],
-                    lastPredictedInterval = it[Cards.lastPredictedInterval],
-                    reviewInterval = it[Cards.reviewInterval],
-                    repetition = it[Cards.repetition],
-                    grade = it[Cards.grade],
-                    predictedInterval = it[Cards.predictedInterval],
-                    front = it[Cards.front],
-                    back = it[Cards.back],
-                    nextReviewOn = it[Cards.nextReviewOn],
-                    lastReviewOn = it[Cards.lastReviewOn],
-                    category = it[Cards.category].value,
-                    cardType = it[Cards.cardType].value
-                )
+                Cards.fromResultRow(it)
             }
         }
         reviewList.mapTo(reviewQueue) { it }
@@ -87,8 +73,7 @@ class ReviewCubit(private val neuralNetwork: NeuralNetwork) :
     private fun emitNextCard() {
         cubitScope.launch {
             if (reviewQueue.size > 0) _flow.emit(HasReview(reviewQueue.removeFirst()))
-            else
-                _flow.emit(NoReviewLeft)
+            else _flow.emit(NoReviewLeft)
         }
     }
 

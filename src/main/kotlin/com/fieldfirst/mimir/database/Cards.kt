@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.jodatime.date
 import org.jetbrains.exposed.sql.jodatime.datetime
 import org.joda.time.DateTime
@@ -28,7 +29,26 @@ object Cards : IntIdTable() {
         reference("category", Categories, onDelete = ReferenceOption.NO_ACTION).default(EntityID(1, Categories))
     val cardType: Column<EntityID<String>> =
         reference("card_type", CardTypes, onUpdate = ReferenceOption.CASCADE, onDelete = ReferenceOption.NO_ACTION)
+    val ordered: Column<Int> = integer("ordered").check { it.greater(0) }
 }
+
+fun Cards.fromResultRow(r: ResultRow): Card = Card(
+    id = r[Cards.id].value,
+    createdOn = r[createdOn],
+    updatedOn = r[updatedOn],
+    lastPredictedInterval = r[lastPredictedInterval],
+    reviewInterval = r[reviewInterval],
+    repetition = r[repetition],
+    grade = r[grade],
+    predictedInterval = r[predictedInterval],
+    front = r[front],
+    back = r[back],
+    nextReviewOn = r[nextReviewOn],
+    lastReviewOn = r[lastReviewOn],
+    category = r[category].value,
+    cardType = r[cardType].value,
+    ordered = r[ordered]
+)
 
 data class Card(
     val id: Int,
@@ -44,5 +64,6 @@ data class Card(
     val nextReviewOn: DateTime,
     val lastReviewOn: DateTime,
     val category: Int,
-    val cardType: String
-)
+    val cardType: String,
+    override val ordered: Int
+) : Order()

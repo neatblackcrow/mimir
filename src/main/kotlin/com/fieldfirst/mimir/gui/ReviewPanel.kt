@@ -15,7 +15,7 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
-class ReviewPanel(private val contentPane: Container, private val cardLayout: CardLayout) : JPanel(), KoinComponent {
+class ReviewPanel(private val parent: Container, private val cardLayout: CardLayout) : JPanel(), KoinComponent {
 
     private val reviewCubit: ReviewCubit by inject()
     private val dailyCubit: DailyCubit by inject()
@@ -59,7 +59,7 @@ class ReviewPanel(private val contentPane: Container, private val cardLayout: Ca
 
                 NoReviewLeft -> {
                     dailyCubit.refreshDailyStatus()
-                    cardLayout.show(contentPane, MainWindow.PANEL_DAILY)
+                    cardLayout.show(parent, MainWindow.PANEL_DAILY)
                 }
             }
         }.launchIn(reviewCubit.cubitScope)

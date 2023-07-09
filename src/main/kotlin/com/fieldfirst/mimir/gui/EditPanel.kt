@@ -7,7 +7,7 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTextArea
 
-class EditPanel(private val contentPane: Container, private val cardLayout: CardLayout) : JPanel() {
+class EditPanel(private val parent: Container, private val cardLayout: CardLayout) : JPanel() {
 
     private val frontTextArea: JTextArea
     private val backTextArea: JTextArea

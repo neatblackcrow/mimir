@@ -13,7 +13,7 @@ import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class DailyPanel(private val contentPane: Container, private val cardLayout: CardLayout) : JPanel(), KoinComponent {
+class DailyPanel(private val parent: Container, private val cardLayout: CardLayout) : JPanel(), KoinComponent {
 
     private val dailyCubit: DailyCubit by inject()
     private val labelReviewCount: JLabel

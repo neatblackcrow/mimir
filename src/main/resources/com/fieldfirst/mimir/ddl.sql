@@ -31,10 +31,12 @@ CREATE TABLE IF NOT EXISTS Categories (
     created_on                      DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_on                      DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     parent_category                 INTEGER DEFAULT 1 NOT NULL,
+    ordered                         INTEGER NOT NULL,
 
     PRIMARY KEY (id),
     FOREIGN KEY (parent_category) REFERENCES Categories (id) ON DELETE NO ACTION,
-    CHECK (updated_on >= created_on)
+    CHECK (updated_on >= created_on),
+    CHECK (ordered > 0)
 );
 
 CREATE TABLE IF NOT EXISTS Cards (
@@ -54,6 +56,7 @@ CREATE TABLE IF NOT EXISTS Cards (
     last_review_on                  DATE DEFAULT CURRENT_DATE NOT NULL,
     category                        INTEGER DEFAULT 1 NOT NULL,
     card_type                       TEXT NOT NULL,
+    ordered                         INTEGER NOT NULL,
 
     PRIMARY KEY (id),
     FOREIGN KEY (card_type) REFERENCES CardTypes (name) ON UPDATE CASCADE ON DELETE NO ACTION,
@@ -63,8 +66,9 @@ CREATE TABLE IF NOT EXISTS Cards (
         (repetition >= 0 AND repetition <= 128) AND
         (grade >= 0 AND grade <= 5) AND
         (predicted_interval >= 0 AND predicted_interval <= 2048)),
-    CHECK (updated_on >= created_on)
+    CHECK (updated_on >= created_on),
+    CHECK (ordered > 0)
 );
 
 INSERT INTO CardTypes VALUES ('Deliberate practice'), ('Incremental reading'), ('Fact');
-INSERT INTO Categories VALUES (1, 'Root', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1);
+INSERT INTO Categories VALUES (1, 'Root', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 1);
