@@ -1,20 +1,31 @@
 package com.fieldfirst.mimir.gui
 
+import com.fieldfirst.mimir.cubit.KnowledgeTreeCubit
+import com.fieldfirst.mimir.cubit.Initial
 import com.fieldfirst.mimir.cubit.MainCubit
+import com.fieldfirst.mimir.database.Card
+import com.fieldfirst.mimir.database.Category
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.awt.BorderLayout
 import java.awt.CardLayout
+import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.ActionEvent
 import javax.swing.*
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
 
 
 class MainWindow : JFrame(), KoinComponent {
 
     private val mainCubit: MainCubit by inject()
+    private val knowledgeTreeCubit: KnowledgeTreeCubit by inject()
+
+    private lateinit var knowledgeTree: JTree
 
     companion object {
         const val PANEL_DAILY = "daily_panel"
@@ -33,6 +44,8 @@ class MainWindow : JFrame(), KoinComponent {
 
         pack()
         isVisible = true
+
+        subscribeFlows()
     }
 
     private fun initializeMenus() {
@@ -57,20 +70,31 @@ class MainWindow : JFrame(), KoinComponent {
             cardLayout.show(this, PANEL_REVIEW)
         }
 
-        // test
-        val style = DefaultMutableTreeNode("Style")
-        val color = DefaultMutableTreeNode("color")
-        val font = DefaultMutableTreeNode("font")
-        style.add(color)
-        style.add(font)
-        val knowledgeTree = JTree(style)
-        style.add(DefaultMutableTreeNode("test"))
-        val tm = knowledgeTree.model as DefaultTreeModel
-        tm.reload() // Use as last resort
-
-        // test 2
-        knowledgeTree.isEditable = true
-        knowledgeTree.cellEditor = DefaultCellEditor(JTextField())
+        knowledgeTree = JTree()
+        knowledgeTree.showsRootHandles = true
+        // knowledgeTree.isEditable = true
+        // knowledgeTree.cellEditor = DefaultCellEditor(JTextField())
+        knowledgeTree.cellRenderer = object: DefaultTreeCellRenderer() {
+            override fun getTreeCellRendererComponent(
+                tree: JTree?,
+                value: Any?,
+                sel: Boolean,
+                expanded: Boolean,
+                leaf: Boolean,
+                row: Int,
+                hasFocus: Boolean
+            ): Component {
+                super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
+                if (value is DefaultMutableTreeNode) {
+                    val node: DefaultMutableTreeNode = value
+                    when (val usrObj: Any = node.userObject) {
+                        is Category -> text = usrObj.name
+                        is Card -> text = usrObj.front
+                    }
+                }
+                return this
+            }
+        }
 
         val leftPanel = JPanel().apply {
             layout = BorderLayout()
@@ -82,6 +106,19 @@ class MainWindow : JFrame(), KoinComponent {
             rightComponent = rightPanel
         }
         add(splitPane, BorderLayout.CENTER)
+    }
+
+    private fun subscribeFlows() {
+        knowledgeTreeCubit.flow.onEach { state ->
+            when (state) {
+                is Initial -> {
+                    val treeModel = knowledgeTree.model as DefaultTreeModel
+                    treeModel.setRoot(state.rootNode)
+                    // treeModel.reload() // Use as last resort
+                }
+            }
+
+        }.launchIn(knowledgeTreeCubit.cubitScope)
     }
 
     private inner class ExitAction : AbstractAction("Exit") {

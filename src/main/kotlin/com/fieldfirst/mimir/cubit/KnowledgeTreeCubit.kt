@@ -9,7 +9,7 @@ sealed class EditState
 
 class Initial(val rootNode: DefaultMutableTreeNode) : EditState()
 
-class EditCubit : BaseCubit<EditState>() {
+class KnowledgeTreeCubit : BaseCubit<EditState>() {
     override fun initialState(): EditState = Initial(buildKnowledgeTree(1))
 
     private fun buildKnowledgeTree(categoryId: Int = 1): DefaultMutableTreeNode {
@@ -32,14 +32,12 @@ class EditCubit : BaseCubit<EditState>() {
             }
         }
         val items: List<Order> = childCategories + childCards
-        items.sortedBy { it.ordered }
-        for (item in items) {
+        for (item in items.sortedBy { it.ordered }) {
             when (item) {
                 is Card -> parentNode.add(DefaultMutableTreeNode(item))
-                is Category -> parentNode.add(DefaultMutableTreeNode(buildKnowledgeTree(item.id)))
+                is Category -> parentNode.add(buildKnowledgeTree(item.id))
             }
         }
-
         return parentNode
     }
 }

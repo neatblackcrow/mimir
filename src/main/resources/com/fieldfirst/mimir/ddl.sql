@@ -71,4 +71,4 @@ CREATE TABLE IF NOT EXISTS Cards (
 );
 
 INSERT INTO CardTypes VALUES ('Deliberate practice'), ('Incremental reading'), ('Fact');
-INSERT INTO Categories VALUES (1, 'Root', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 1);
+INSERT INTO Categories VALUES (1, 'Root', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 1);

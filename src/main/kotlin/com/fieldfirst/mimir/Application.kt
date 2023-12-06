@@ -1,6 +1,7 @@
 package com.fieldfirst.mimir
 
 import com.fieldfirst.mimir.cubit.DailyCubit
+import com.fieldfirst.mimir.cubit.KnowledgeTreeCubit
 import com.fieldfirst.mimir.cubit.MainCubit
 import com.fieldfirst.mimir.cubit.ReviewCubit
 import com.fieldfirst.mimir.gui.MainWindow
@@ -41,6 +42,7 @@ fun main() {
         single { MainCubit() }
         single { DailyCubit() }
         single { ReviewCubit(get()) }
+        single { KnowledgeTreeCubit() }
     }
     startKoin {
         modules(appModule)
